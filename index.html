@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>北郷ぬくもり ライド＆スパ</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:#f6efe6;
+    margin:0;
+    padding:0;
+    text-align:center;
+}
+
+.header img{
+    width:100%;
+    max-width:480px;
+}
+
+.container{
+    padding:15px;
+}
+
+.stamp-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin:15px 0;
+}
+
+.stamp{
+    position:relative;
+    aspect-ratio:1;
+    border-radius:12px;
+    overflow:hidden;
+    background:#ccc;
+    box-shadow:0 4px 6px rgba(0,0,0,0.25);
+}
+
+.stamp img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    filter:brightness(45%);
+}
+
+.stamp .label{
+    position:absolute;
+    bottom:6px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.6);
+    color:#fff;
+    font-size:12px;
+    padding:3px 10px;
+    border-radius:12px;
+}
+
+.stamp.done img{
+    filter:none;
+}
+
+.stamp.done .label{
+    background:#fff;
+    color:#8e2c2c;
+    border:1px solid #8e2c2c;
+}
+
+.stamp.done::after{
+    content:"◯";
+    position:absolute;
+    top:6px;
+    right:8px;
+    font-size:26px;
+    color:#d43c3c;
+    font-weight:bold;
+}
+
+.card{
+    background:#fff7e8;
+    border-radius:15px;
+    padding:20px;
+    border:2px solid #e2c6a3;
+    margin-top:15px;
+}
+
+button{
+    background:#c0392b;
+    color:#fff;
+    border:none;
+    padding:15px;
+    border-radius:10px;
+    font-size:17px;
+    width:100%;
+    margin-top:15px;
+}
+
+#reward,#camera,#complete{display:none;}
+
+.confetti{
+    position:fixed;
+    top:-10px;
+    width:14px;
+    height:14px;
+    background:pink;
+    border-radius:50% 50% 50% 0;
+    transform:rotate(45deg);
+    animation:fall 4s linear infinite;
+}
+@keyframes fall{
+    to{transform:translateY(120vh) rotate(360deg);}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== メインビジュアル ===== -->
+<div class="header">
+    <img src="MAIN_IMAGE.png">
+</div>
+
+<div class="container">
+
+<!-- ===== スタンプ ===== -->
+<div class="stamp-grid">
+    <div id="s1" class="stamp"><img src="MAIN_IMAGE.png"><div class="label">未取得</div></div>
+    <div id="s2" class="stamp"><img src="MAIN_IMAGE.png"><div class="label">未取得</div></div>
+    <div id="s3" class="stamp"><img src="MAIN_IMAGE.png"><div class="label">未取得</div></div>
+    <div id="s4" class="stamp"><img src="MAIN_IMAGE.png"><div class="label">未取得</div></div>
+    <div id="s5" class="stamp"><img src="MAIN_IMAGE.png"><div class="label">未取得</div></div>
+</div>
+
+<div id="reward" class="card">
+    <h3>🎉 全スタンプ達成！</h3>
+    <p>ツーリングお疲れさまでした。<br>特典をご利用ください。</p>
+    <button onclick="startScan()">特典を利用する</button>
+</div>
+
+</div>
+
+<div id="camera">
+    <p>受付QRコードを読み込んでください</p>
+    <div id="reader"></div>
+</div>
+
+<div id="complete" class="card">
+    <h3>利用完了</h3>
+    <p>ありがとうございました！</p>
+</div>
+
+<script>
+const CHECK_CODE="kitago-cherry-ok";
+let stamps=JSON.parse(localStorage.getItem("stamps")||"[]");
+
+function update(){
+    stamps.forEach(n=>{
+        const el=document.getElementById("s"+n);
+        el.classList.add("done");
+        el.querySelector(".label").textContent="取得";
+    });
+    if(stamps.length>=5){
+        document.getElementById("reward").style.display="block";
+        sakura();
+    }
+}
+
+const p=new URLSearchParams(location.search).get("s");
+if(p && !stamps.includes(p)){
+    stamps.push(p);
+    localStorage.setItem("stamps",JSON.stringify(stamps));
+    alert("スタンプを取得しました");
+    location.href=location.pathname;
+}
+
+function sakura(){
+    for(let i=0;i<35;i++){
+        const c=document.createElement("div");
+        c.className="confetti";
+        c.style.left=Math.random()*100+"vw";
+        c.style.animationDuration=(3+Math.random()*2)+"s";
+        document.body.appendChild(c);
+        setTimeout(()=>c.remove(),5000);
+    }
+}
+
+function startScan(){
+    document.getElementById("camera").style.display="block";
+    const qr=new Html5Qrcode("reader");
+    qr.start({facingMode:"environment"},{fps:10,qrbox:250},txt=>{
+        if(txt===CHECK_CODE){
+            qr.stop();
+            localStorage.removeItem("stamps");
+            document.getElementById("camera").style.display="none";
+            document.getElementById("complete").style.display="block";
+        }
+    });
+}
+
+update();
+</script>
+
+</body>
+</html>
